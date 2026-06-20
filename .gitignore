@@ -1,0 +1,32 @@
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Model files (large)
+models/*.bin
+models/*.safetensors
+models/*.pt
+models/checkpoint-*/
+
+# Hugging Face cache
+.cache/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+# Competition data (large files - download from Zindi instead)
+data/Train.csv
+data/Val.csv
+data/*.pdf
+data/manifest-*.json
+data/*starter_notebook*.ipynb
