@@ -30,3 +30,4 @@ data/Val.csv
 data/*.pdf
 data/manifest-*.json
 data/*starter_notebook*.ipynb
+models/
