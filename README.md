@@ -1,194 +1,255 @@
-\# Multilingual Health Question Answering — Low-Resource African Languages
+# 🌍 Multilingual Health Question Answering for Low-Resource African Languages
 
+A multilingual question-answering system developed for the Zindi & ITU **Multilingual Health Question Answering Challenge**, in collaboration with HASH (Hub for AI in Maternal, Sexual and Reproductive Health).
 
+The goal is to generate accurate answers to maternal, sexual, and reproductive health (MSRH) questions in the same language as the input question across multiple low-resource African languages.
 
-Solution for the \[Zindi/ITU Multilingual Health QA Challenge](https://zindi.africa/competitions/multilingual-health-question-answering-in-low-resource-african-languages-challenge), built in collaboration with HASH (Hub for AI in Maternal, Sexual and Reproductive Health).
+---
 
+## 👨‍💻 Author
 
+**Mustafa Elsherif**
 
-\*\*Implemented by:\*\* Mustafa Elsherif
+📧 Email: [mustafaelsherif99@gmail.com](mailto:mustafaelsherif99@gmail.com)
 
-\*\*Email:\*\* \[mustafaelsherif99@gmail.com](mailto:mustafaelsherif99@gmail.com)
+💼 LinkedIn: https://www.linkedin.com/in/mustafa-elsherif-77b74729a
 
-\*\*LinkedIn:\*\* <a href="https://www.linkedin.com/in/mustafa-elsherif-77b74729a">https://www.linkedin.com/in/mustafa-elsherif-77b74729a</a>
+---
 
+## 🎯 Challenge Overview
 
+This project addresses multilingual health question answering across five languages and eight language-country configurations.
 
-\*\*Public Leaderboard Score: 0.277961\*\*
+| Language Configuration | Language | Country  |
+| ---------------------- | -------- | -------- |
+| Eng_Uga                | English  | Uganda   |
+| Eng_Gha                | English  | Ghana    |
+| Eng_Eth                | English  | Ethiopia |
+| Eng_Ken                | English  | Kenya    |
+| Aka_Gha                | Akan     | Ghana    |
+| Amh_Eth                | Amharic  | Ethiopia |
+| Lug_Uga                | Luganda  | Uganda   |
+| Swa_Ken                | Swahili  | Kenya    |
 
+The model receives a health-related question and generates a natural-language answer in the same language.
 
+---
 
-\## Problem
+## 📊 Dataset
 
+| Split      | Samples |
+| ---------- | ------: |
+| Train      |  29,815 |
+| Validation |   6,686 |
+| Test       |   2,618 |
 
+### Dataset Access
 
-Build a multilingual sequence-to-sequence model that answers maternal, sexual, and reproductive health (MSRH) questions in the same language they were asked, across 5 languages and 8 language-country configurations:
+Competition data is not included in this repository.
 
-
-
-| Subset                             | Language | Country                        |
-
-| ---------------------------------- | -------- | ------------------------------ |
-
-| Eng\_Uga, Eng\_Gha, Eng\_Eth, Eng\_Ken | English  | Uganda, Ghana, Ethiopia, Kenya |
-
-| Aka\_Gha                            | Akan     | Ghana                          |
-
-| Amh\_Eth                            | Amharic  | Ethiopia                       |
-
-| Lug\_Uga                            | Luganda  | Uganda                         |
-
-| Swa\_Ken                            | Swahili  | Kenya                          |
-
-
-
-\## Dataset
-
-
-
-\* \*\*Train\*\*: 29,815 question-answer pairs
-
-\* \*\*Validation\*\*: 6,686 question-answer pairs
-
-\* \*\*Test\*\*: 2,618 questions (answers to be generated)
-
-
-
-Data is not included in this repo (per competition guidelines, available directly from \[Zindi](https://zindi.africa/competitions/multilingual-health-question-answering-in-low-resource-african-languages-challenge/data)). Place `Train.csv`, `Val.csv`, `Test.csv`, `SampleSubmission.csv` into `data/` before running.
-
-
-
-\## Approach
-
-
-
-\*\*Model\*\*: \[`google/mt5-small`](https://huggingface.co/google/mt5-small) — a multilingual sequence-to-sequence transformer, fine-tuned end-to-end on all 8 language subsets jointly, with the target subset included as a text prefix (e.g. `"answer health question in Aka\_Gha: ..."`).
-
-
-
-\*\*Why mT5-small\*\*: Given an 8GB GPU and a tight time budget, larger variants (mT5-base, mT5-large) were benchmarked and found to require 7-21+ hours per epoch with this hardware — infeasible within the competition deadline. mT5-small trains a full 3-epoch run in \~2.5-4 hours and produces stable, non-degenerate training (verified via loss/gradient-norm monitoring) — the dependable choice under the constraints.
-
-
-
-\*\*Generation\*\*: Beam search (`num\_beams=4`) with `no\_repeat\_ngram\_size=3` and `repetition\_penalty=1.3` to prevent the repetition loops common in small seq2seq models — this alone improved local ROUGE-1 by \~22% over plain beam search.
-
-
-
-\*\*Training config\*\*:
-
-
-
-\* `max\_input\_length=128`, `max\_target\_length=256`
-
-\* Effective batch size 16 (`batch\_size=2` × `gradient\_accumulation\_steps=8`)
-
-\* `bf16` mixed precision (more stable than `fp16` for mT5 architectures)
-
-\* 3 epochs, `learning\_rate=3e-4`
-
-\* Seed fixed at 42 throughout for reproducibility
-
-
-
-\## Repository Structure
-
-
+Download the dataset from Zindi and place the following files inside the `data/` directory:
 
 ```text
-
-├── src/
-
-│   ├── explore\_data.py          # Initial dataset exploration
-
-│   ├── train\_baseline.py        # Main training script
-
-│   ├── evaluate\_model.py        # Local ROUGE evaluation on Val.csv (per-language breakdown)
-
-│   └── generate\_submission.py   # Inference on Test.csv + submission file builder
-
-├── submissions/
-
-│   └── submission\_v2\_mt5small\_antirep.csv   # Submitted file (Public Score: 0.277961)
-
-├── models/                      # Trained model (gitignored — large files; reproducible via src/train\_baseline.py)
-
-└── requirements.txt
-
+data/
+├── Train.csv
+├── Val.csv
+├── Test.csv
+└── SampleSubmission.csv
 ```
 
+---
 
+## 🧠 Model Approach
 
-\## Reproducing Results
+### Base Model
 
+**google/mt5-small**
 
+A multilingual sequence-to-sequence Transformer model fine-tuned on all language subsets jointly.
+
+### Input Format
+
+Each sample is converted into a task-oriented prompt:
+
+```text
+answer health question in Aka_Gha: <question>
+```
+
+This allows a single model to learn language-specific generation while sharing knowledge across languages.
+
+---
+
+## ⚙️ Training Configuration
+
+| Parameter             | Value     |
+| --------------------- | --------- |
+| Model                 | mT5-small |
+| Epochs                | 3         |
+| Learning Rate         | 3e-4      |
+| Max Input Length      | 128       |
+| Max Target Length     | 256       |
+| Batch Size            | 2         |
+| Gradient Accumulation | 8         |
+| Effective Batch Size  | 16        |
+| Precision             | bf16      |
+| Seed                  | 42        |
+
+---
+
+## 🚀 Decoding Strategy
+
+To reduce repetitive generations commonly observed in small seq2seq models:
+
+| Parameter            | Value |
+| -------------------- | ----- |
+| num_beams            | 4     |
+| no_repeat_ngram_size | 3     |
+| repetition_penalty   | 1.3   |
+
+This configuration produced noticeably more stable and coherent outputs compared to standard beam search.
+
+---
+
+## 📁 Repository Structure
+
+```text
+.
+├── data/
+│
+├── src/
+│   ├── explore_data.py
+│   ├── train_baseline.py
+│   ├── evaluate_model.py
+│   └── generate_submission.py
+│
+├── models/
+│   └── (generated after training)
+│
+├── submissions/
+│   └── submission.csv
+│
+├── requirements.txt
+└── README.md
+```
+
+### Scripts
+
+| Script                 | Description                              |
+| ---------------------- | ---------------------------------------- |
+| explore_data.py        | Dataset exploration and statistics       |
+| train_baseline.py      | Model training                           |
+| evaluate_model.py      | Validation evaluation                    |
+| generate_submission.py | Test inference and submission generation |
+
+---
+
+## 🔄 Reproducing Results
+
+### 1. Create Environment
 
 ```bash
-
 python -m venv venv
-
-venv\\Scripts\\activate        # Windows
-
-pip install -r requirements.txt
-
-
-
-python src/explore\_data.py            # optional: inspect the data
-
-python src/train\_baseline.py          # trains and saves to models/mt5-small-baseline
-
-python src/evaluate\_model.py          # local ROUGE-1 / ROUGE-L on validation set
-
-python src/generate\_submission.py     # generates submissions/\*.csv
-
 ```
 
+### 2. Activate Environment
 
+Windows:
 
-\## Local Validation Results (1000-sample held-out check)
+```bash
+venv\Scripts\activate
+```
 
+Linux / macOS:
 
+```bash
+source venv/bin/activate
+```
 
-| Metric     | Score  |
+### 3. Install Dependencies
 
-| ---------- | ------ |
+```bash
+pip install -r requirements.txt
+```
 
+### 4. Run Pipeline
+
+```bash
+python src/explore_data.py
+
+python src/train_baseline.py
+
+python src/evaluate_model.py
+
+python src/generate_submission.py
+```
+
+---
+
+## 📈 Local Validation Results
+
+Validation was performed on a held-out subset of 1,000 samples.
+
+| Metric     |  Score |
+| ---------- | -----: |
 | ROUGE-1 F1 | 0.2713 |
-
 | ROUGE-L F1 | 0.1979 |
 
+### Key Observations
 
+* English and Akan subsets achieved the strongest performance.
+* Amharic remained the most challenging language.
+* Performance degradation appears strongly linked to Ge'ez script tokenization limitations.
+* Cross-lingual training improved generalization for low-resource subsets.
 
-Per-language breakdown showed strong variance — high-resource subsets (English, Akan) scored 0.27-0.40 ROUGE-1, while Amharic (Ge'ez script, smallest subset at 1,845 training rows) lagged significantly (\~0.02), suggesting tokenizer/script coverage limitations for mT5 on Ge'ez script as the primary bottleneck rather than data volume alone.
+---
 
+## 🔍 Challenges
 
+### Limited Compute Resources
 
-\## Future Improvements
+Training was conducted on an 8GB GPU.
 
+Larger variants such as mT5-Base and mT5-Large were explored but proved impractical under the available hardware and competition timeline.
 
+### Low-Resource Languages
 
-Given more time/compute, the following were identified as promising next steps:
+Some language subsets contained significantly fewer examples, making generalization difficult, especially for Amharic.
 
+---
 
+## 💡 Future Work
 
-\* Larger models (mT5-base/large) with corrected hyperparameters (lower LR, longer warmup) to address training instability observed at scale
+Potential improvements include:
 
-\* Amharic-specific handling (script-aware tokenization or a dedicated model for Ge'ez script)
+* Fine-tuning larger mT5 variants
+* Language-specific optimization for Amharic
+* Improved tokenization for Ge'ez script
+* Longer output sequence lengths
+* Hyperparameter optimization and learning-rate scheduling
+* Data augmentation for low-resource subsets
 
-\* Longer `max\_target\_length` (some references run up to 2,956 characters) traded against compute budget
+---
 
+## ✅ Reproducibility
 
+* Fixed random seed (`42`)
+* Open-source libraries only
+* No AutoML systems used
+* Trained exclusively on competition-provided data
 
-\## Compliance
+---
 
+## 🛠️ Technologies
 
+* Python
+* PyTorch
+* Hugging Face Transformers
+* Pandas
+* NumPy
+* ROUGE Evaluation
 
-\* Open-source tools only (Hugging Face Transformers, PyTorch, pandas)
+---
 
-\* No AutoML
+## 📜 License
 
-\* Fixed seed (42) for reproducibility
-
-\* Trained entirely on competition-provided data
-
-
-
+This repository is intended for research and educational purposes. Please follow the original competition terms and dataset usage policies provided by Zindi.
