@@ -1,41 +1,62 @@
-# 🌍 Multilingual Health Question Answering for Low-Resource African Languages
+﻿# 🌍 Multilingual Health Question Answering for Low-Resource African Languages
 
-A multilingual question-answering system developed for the Zindi & ITU **Multilingual Health Question Answering Challenge**, in collaboration with HASH (Hub for AI in Maternal, Sexual and Reproductive Health).
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-red?style=for-the-badge&logo=streamlit)](https://multilingual-health-app.streamlit.app/)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python)](https://www.python.org/)
+[![Transformers](https://img.shields.io/badge/HuggingFace-Transformers-yellow?style=for-the-badge&logo=huggingface)](https://huggingface.co/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-red?style=for-the-badge&logo=pytorch)](https://pytorch.org/)
+
+A multilingual question-answering system developed for the **Zindi & ITU Multilingual Health Question Answering Challenge**, in collaboration with HASH (Hub for AI in Maternal, Sexual and Reproductive Health).
 
 The goal is to generate accurate answers to maternal, sexual, and reproductive health (MSRH) questions in the same language as the input question across multiple low-resource African languages.
 
 ---
 
-## 👨‍💻 Author
+## Live Demo
 
-**Mustafa Elsherif**
+Try the deployed Streamlit dashboard:
 
-📧 Email: [mustafaelsherif99@gmail.com](mailto:mustafaelsherif99@gmail.com)
+https://multilingual-health-app.streamlit.app/
 
-💼 LinkedIn: https://www.linkedin.com/in/mustafa-elsherif-77b74729a
+### Features
+
+* Dataset overview and language distribution
+* Per-language model performance breakdown (ROUGE-1 / ROUGE-L)
+* Full approach and methodology summary
+
+> The dashboard displays results from the trained model; it does not run live inference in the cloud.
 
 ---
 
-## 🎯 Challenge Overview
+## Author
+
+**Mustafa Elsherif**
+
+Email: mustafaelsherif99@gmail.com
+
+LinkedIn: https://www.linkedin.com/in/mustafa-elsherif-77b74729a
+
+---
+
+## Challenge Overview
 
 This project addresses multilingual health question answering across five languages and eight language-country configurations.
 
 | Language Configuration | Language | Country  |
-| ---------------------- | -------- | -------- |
-| Eng_Uga                | English  | Uganda   |
-| Eng_Gha                | English  | Ghana    |
-| Eng_Eth                | English  | Ethiopia |
-| Eng_Ken                | English  | Kenya    |
-| Aka_Gha                | Akan     | Ghana    |
-| Amh_Eth                | Amharic  | Ethiopia |
-| Lug_Uga                | Luganda  | Uganda   |
-| Swa_Ken                | Swahili  | Kenya    |
+| ----------------------- | -------- | -------- |
+| Eng_Uga                 | English  | Uganda   |
+| Eng_Gha                 | English  | Ghana    |
+| Eng_Eth                 | English  | Ethiopia |
+| Eng_Ken                 | English  | Kenya    |
+| Aka_Gha                 | Akan     | Ghana    |
+| Amh_Eth                 | Amharic  | Ethiopia |
+| Lug_Uga                 | Luganda  | Uganda   |
+| Swa_Ken                 | Swahili  | Kenya    |
 
 The model receives a health-related question and generates a natural-language answer in the same language.
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 | Split      | Samples |
 | ---------- | ------: |
@@ -43,11 +64,7 @@ The model receives a health-related question and generates a natural-language an
 | Validation |   6,686 |
 | Test       |   2,618 |
 
-### Dataset Access
-
-Competition data is not included in this repository.
-
-Download the dataset from Zindi and place the following files inside the `data/` directory:
+Competition data is not included in this repository. Download the dataset from Zindi and place the following files inside the data/ directory:
 
 ```text
 data/
@@ -59,197 +76,131 @@ data/
 
 ---
 
-## 🧠 Model Approach
+## Model Approach
 
 ### Base Model
 
-**google/mt5-small**
+google/mt5-small
 
-A multilingual sequence-to-sequence Transformer model fine-tuned on all language subsets jointly.
+A multilingual sequence-to-sequence Transformer model fine-tuned jointly on all language subsets.
 
-### Input Format
-
-Each sample is converted into a task-oriented prompt:
+### Input Prompt Format
 
 ```text
 answer health question in Aka_Gha: <question>
 ```
 
-This allows a single model to learn language-specific generation while sharing knowledge across languages.
+### Why mT5-Small?
+
+Training was performed on an 8GB GPU. Larger variants such as mT5-Base and mT5-Large were benchmarked but required substantially longer training times and exceeded practical resource constraints.
+
+mT5-Small provided stable training behavior, reasonable memory usage, fast experimentation cycles, and competitive multilingual performance.
 
 ---
 
-## ⚙️ Training Configuration
+## Training Configuration
 
-| Parameter             | Value     |
-| --------------------- | --------- |
-| Model                 | mT5-small |
-| Epochs                | 3         |
-| Learning Rate         | 3e-4      |
-| Max Input Length      | 128       |
-| Max Target Length     | 256       |
-| Batch Size            | 2         |
-| Gradient Accumulation | 8         |
-| Effective Batch Size  | 16        |
-| Precision             | bf16      |
-| Seed                  | 42        |
+| Parameter                   | Value     |
+| ---------------------------- | --------- |
+| Model                         | mT5-Small |
+| Epochs                        | 3         |
+| Learning Rate                 | 3e-4      |
+| Max Input Length               | 128       |
+| Max Target Length              | 256       |
+| Batch Size                     | 2         |
+| Gradient Accumulation Steps    | 8         |
+| Effective Batch Size           | 16        |
+| Precision                      | bf16      |
+| Random Seed                    | 42        |
 
 ---
 
-## 🚀 Decoding Strategy
-
-To reduce repetitive generations commonly observed in small seq2seq models:
+## Decoding Strategy
 
 | Parameter            | Value |
-| -------------------- | ----- |
-| num_beams            | 4     |
-| no_repeat_ngram_size | 3     |
-| repetition_penalty   | 1.3   |
-
-This configuration produced noticeably more stable and coherent outputs compared to standard beam search.
+| --------------------- | ----- |
+| num_beams              | 4     |
+| no_repeat_ngram_size   | 3     |
+| repetition_penalty     | 1.3   |
 
 ---
 
-## 📁 Repository Structure
-
-```text
-.
-├── data/
-│
-├── src/
-│   ├── explore_data.py
-│   ├── train_baseline.py
-│   ├── evaluate_model.py
-│   └── generate_submission.py
-│
-├── models/
-│   └── (generated after training)
-│
-├── submissions/
-│   └── submission.csv
-│
-├── requirements.txt
-└── README.md
-```
-
-### Scripts
-
-| Script                 | Description                              |
-| ---------------------- | ---------------------------------------- |
-| explore_data.py        | Dataset exploration and statistics       |
-| train_baseline.py      | Model training                           |
-| evaluate_model.py      | Validation evaluation                    |
-| generate_submission.py | Test inference and submission generation |
-
----
-
-## 🔄 Reproducing Results
-
-### 1. Create Environment
-
-```bash
-python -m venv venv
-```
-
-### 2. Activate Environment
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Linux / macOS:
-
-```bash
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Run Pipeline
-
-```bash
-python src/explore_data.py
-
-python src/train_baseline.py
-
-python src/evaluate_model.py
-
-python src/generate_submission.py
-```
-
----
-
-## 📈 Local Validation Results
-
-Validation was performed on a held-out subset of 1,000 samples.
+## Local Validation Results
 
 | Metric     |  Score |
-| ---------- | -----: |
-| ROUGE-1 F1 | 0.2713 |
-| ROUGE-L F1 | 0.1979 |
+| ----------- | -----: |
+| ROUGE-1 F1   | 0.2713 |
+| ROUGE-L F1   | 0.1979 |
 
 ### Key Observations
 
 * English and Akan subsets achieved the strongest performance.
 * Amharic remained the most challenging language.
-* Performance degradation appears strongly linked to Ge'ez script tokenization limitations.
-* Cross-lingual training improved generalization for low-resource subsets.
+* Ge'ez script tokenization appears to be a major bottleneck.
 
 ---
 
-## 🔍 Challenges
+## Repository Structure
 
-### Limited Compute Resources
+```text
+.
+├── data/
+├── src/
+│   ├── explore_data.py
+│   ├── train_baseline.py
+│   ├── evaluate_model.py
+│   └── generate_submission.py
+├── models/
+├── submissions/
+├── .streamlit/
+│   └── config.toml
+├── dashboard.py
+├── requirements.txt
+├── requirements-dashboard.txt
+└── README.md
+```
 
-Training was conducted on an 8GB GPU.
+### Scripts
 
-Larger variants such as mT5-Base and mT5-Large were explored but proved impractical under the available hardware and competition timeline.
-
-### Low-Resource Languages
-
-Some language subsets contained significantly fewer examples, making generalization difficult, especially for Amharic.
+| Script                  | Description                               |
+| ------------------------ | ------------------------------------------ |
+| explore_data.py           | Dataset exploration and analysis           |
+| train_baseline.py         | Model training pipeline                    |
+| evaluate_model.py          | Validation evaluation                      |
+| generate_submission.py     | Test inference and submission generation   |
+| dashboard.py                | Streamlit dashboard                        |
 
 ---
 
-## 💡 Future Work
+## Reproducing Results
 
-Potential improvements include:
-
-* Fine-tuning larger mT5 variants
-* Language-specific optimization for Amharic
-* Improved tokenization for Ge'ez script
-* Longer output sequence lengths
-* Hyperparameter optimization and learning-rate scheduling
-* Data augmentation for low-resource subsets
+```bash
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python src/train_baseline.py
+python src/evaluate_model.py
+python src/generate_submission.py
+streamlit run dashboard.py
+```
 
 ---
 
-## ✅ Reproducibility
+## Technologies Used
 
-* Fixed random seed (`42`)
+Python, PyTorch, Hugging Face Transformers, Pandas, NumPy, Streamlit, ROUGE Evaluation
+
+---
+
+## Reproducibility
+
+* Fixed random seed (42)
 * Open-source libraries only
 * No AutoML systems used
 * Trained exclusively on competition-provided data
 
 ---
 
-## 🛠️ Technologies
+## License
 
-* Python
-* PyTorch
-* Hugging Face Transformers
-* Pandas
-* NumPy
-* ROUGE Evaluation
-
----
-
-## 📜 License
-
-This repository is intended for research and educational purposes. Please follow the original competition terms and dataset usage policies provided by Zindi.
+This repository is intended for research and educational purposes. Please comply with the original competition rules, dataset licenses, and usage policies provided by Zindi and ITU.
