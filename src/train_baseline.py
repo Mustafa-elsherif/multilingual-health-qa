@@ -1,6 +1,6 @@
 """
 Baseline training script for Multilingual Health QA Challenge (Zindi/ITU)
-Model: google/mt5-base
+Model: google/mt5-small
 Task: input (question) -> output (health answer), across 8 language subsets
 """
 
@@ -21,10 +21,10 @@ import evaluate
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-MODEL_NAME = "google/mt5-base"
+MODEL_NAME = "google/mt5-small"
 MAX_INPUT_LEN = 128     # covers ~95% of inputs (max seen was 520 chars ~ much fewer tokens)
 MAX_TARGET_LEN = 256    # balances coverage vs training speed
-OUTPUT_DIR = "models/mt5-base-baseline"
+OUTPUT_DIR = "models/mt5-small-baseline"
 SEED = 42
 
 torch.manual_seed(SEED)
@@ -58,7 +58,6 @@ val_dataset = Dataset.from_pandas(val_df_subset[["model_input", "output"]])
 print("Loading tokenizer and model...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
-model.gradient_checkpointing_enable()
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
@@ -111,14 +110,13 @@ training_args = Seq2SeqTrainingArguments(
     save_total_limit=2,
     learning_rate=3e-4,
     per_device_train_batch_size=2,
-    per_device_eval_batch_size=4,
+    per_device_eval_batch_size=8,
     gradient_accumulation_steps=8,   # effective batch size = 16
     weight_decay=0.01,
     num_train_epochs=3,
     predict_with_generate=True,
     generation_max_length=MAX_TARGET_LEN,
-    bf16=True,
-    gradient_checkpointing=True,
+    bf16=True,                       # speeds up training, more stable than fp16 for mT5
     logging_steps=50,
     report_to="none",
     seed=SEED,
